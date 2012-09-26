@@ -1,30 +1,33 @@
 package au.com.ozblog.hibernate.h2.example;
 
+import java.util.List;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 public class Main {
-	public static void main(String[] a) throws Exception {
-		Class.forName("org.h2.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:h2:database/test", "sa",
-				"");
 
-		Statement st = conn.createStatement();
-		st.execute("drop table customer");
-		st.execute("create table customer(id integer, name varchar(10))");
-		st.execute("insert into customer values (1, 'Thomas')");
-		st.execute("insert into customer values (2, 'Levi')");
-		st.execute("insert into customer values (3, 'Jo Blog')");
-		Statement stmt = conn.createStatement();
-		ResultSet rset = stmt.executeQuery("select name from customer");
-		while (rset.next()) {
-			String name = rset.getString(1);
-			System.out.println(name);
+	public static void main(String[] args) {
+		User user = new User(1, "Levi");
+
+		SessionFactory sessionFactory = new Configuration().configure()
+				.buildSessionFactory();
+		Session session = sessionFactory.openSession();
+
+		session.beginTransaction();
+		session.save(user);
+		session.getTransaction().commit();
+
+		// now lets pull events from the database and list them
+		session = sessionFactory.openSession();
+		session.beginTransaction();
+		List result = session.createQuery("from User").list();
+		for (User event : (List<User>) result) {
+			System.out.println(event.getName());
 		}
-
-		conn.close();
+		session.getTransaction().commit();
+		session.close();
 	}
+
 }
